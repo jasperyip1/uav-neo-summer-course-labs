@@ -2,74 +2,128 @@
 
 MIT BWSI Autonomous Drone Racing Course — UAV Neo
 
-These labs re-cast the **Week 2 Vision** and **Week 3 Controls** Jupyter notebooks as
-hands-on labs that run against the **UAV Neo simulator**, using the same `labs/module/tasks`
-structure as [`uav-neo-prereq-labs`](../uav-neo-prereq-labs).
+These labs turn the **Week 2 Vision** and **Week 3 Controls** lessons into hands-on labs
+you run against the **UAV Neo simulator** — the same `labs/<module>/tasks/<step>.py`
+structure as [`uav-neo-prereq-labs`](../uav-neo-prereq-labs). You fill in small chunks of
+code, run them, and watch the drone fly (or, for the math labs, see `PASS`/`FAIL` checks).
 
-Each lab is split into small **steps**. Every step has a clearly marked student section:
+---
+
+## 1. Getting started
+
+You need the UAV Neo tooling installed (the `drone` command, the Python library, and the
+simulator) from [`uav-neo-installer`](../uav-neo-installer). Once that is set up:
+
+```bash
+# 1. Put these labs where the `drone` tool can find them (one time).
+#    The installer symlinks this repo in as labs/course, so you can run:
+drone sim course/week3_controls/module2_feedback_control/main.py
+#    (or copy the contents of labs/ into your drone-student/labs/ folder)
+
+# 2. Launch the simulator window (once per session).
+drone open_sim
+
+# 3. Run a lab. The Python side starts and waits for the simulator.
+drone sim course/week3_controls/module2_feedback_control/main.py
+
+# 4. Click the simulator window and press ENTER to start the program.
+#    (That hands control to your code — the drone arms and the lab begins.)
+```
+
+> **The `Enter` key is required every run.** The Python script connects to the simulator
+> and prints *"...Enter user program mode to begin"*. Nothing happens until you press
+> `Enter` in the sim window.
+
+The math-only labs don't need the simulator — run them directly with `python3` (below).
+
+---
+
+## 2. How a lab is structured
+
+Each lab is a **module** split into small **steps**. Every step file has one clearly
+marked spot for your code:
 
 ```python
 ##################################
 #### START PUT CODE HERE #########
 
-# YOUR CODE HERE  (hints in the comments)
+# YOUR CODE HERE   (the comments above give you the algorithm + hints)
 
 ###### END PUT CODE HERE #########
 ##################################
 ```
 
-A completed reference implementation lives next to every student file under `solutions/`.
+| Folder / file | What it is |
+|---------------|------------|
+| `tasks/`           | **Your** files — the blanks you fill in |
+| `solutions/`       | Completed reference implementations (peek only if you're stuck!) |
+| `main.py`          | Runs all the steps in order using your `tasks/` code |
+| `main_solution.py` | Same, but runs the `solutions/` code (instructor reference flight) |
+| `README.md`        | What the module teaches and how to run it |
+
+Run options:
+
+```bash
+drone sim course/<week>/<module>/main.py            # all steps, your code
+drone sim course/<week>/<module>/main_solution.py   # all steps, reference
+drone sim course/<week>/<module>/tasks/<step>.py    # just one step, your code
+```
 
 ## Two kinds of labs
 
-Following a **hybrid** design:
-
-- **Concept labs** (pure Python, no drone) teach the underlying math. Run them directly:
+- **Concept labs** (pure Python, no drone) teach the underlying math and print `PASS`/`FAIL`:
   ```bash
   python3 labs/week2_vision/module1_image_formation/tasks/image_formation.py
   ```
-  They print `PASS`/`FAIL` for a set of built-in self-checks.
+- **Simulator labs** fly the drone using the live camera / flight / physics APIs (run with
+  `drone sim`, as above).
 
-- **Simulator labs** fly the drone and use the live camera / flight / physics APIs. Run them
-  through the course tool, exactly like the prereq labs:
-  ```bash
-  drone open_sim                                   # launch the Unity sim once
-  drone sim week2_vision/module5_color_segmentation/main.py
-  ```
+---
 
-## Instructor answer keys
+## 3. Flying in the simulator — what you need to know
 
-Every simulator module ships two orchestrators:
+The simulated drone does **not** behave like a simple "go to (x, y, z)" robot. A few facts
+that the labs are built around (and that you'll need when tuning your own code):
 
-- `main.py`         — imports the student `tasks/` package (blanks)
-- `main_solution.py` — imports the completed `solutions/` package
+- **It starts on the ground at a non-zero altitude reading.** `get_altitude()` is not 0 at
+  the ground. So the labs measure height **above the ground sampled at launch** — use
+  `neo_lab.height(drone)`, not the raw altitude, and aim for heights *above* the ground.
+- **`takeoff()` arms the motors but does not climb on its own.** To get airborne you give
+  throttle. The shared `neo_lab.Launcher` does this for you (arm, then climb to a safe
+  height) — every simulator lab's `main.py` runs it before your steps.
+- **Flight commands are like speed commands.** `send_pcmd(pitch, roll, yaw, throttle)` with
+  each value in `[-1, 1]`: throttle sets vertical speed, pitch sets forward speed, etc.
+  `stop()` (all zeros) makes the drone hold its position. **Small commands (below ~0.05) do
+  nothing** — there's a deadband — so a pure proportional controller settles a little short
+  of its target (which is exactly why the PID lab adds an integral term).
+- **Gates glow; there are no red props or painted lines.** The race scene is dark gates with
+  **cyan** edges (forward camera) and **white** edges (downward camera) over a blue wall and
+  grey floor. The vision labs find gates by **brightness** / **cyan**, not red. The
+  `neo_lab` helpers below do this for you.
 
-```bash
-drone sim week3_controls/module3_pid/main.py            # student version
-drone sim week3_controls/module3_pid/main_solution.py   # reference flight
+---
+
+## 4. The `neo_lab` helper (`labs/neo_lab.py`)
+
+Shared helpers the simulator labs use. Import is set up for you at the top of each file
+(the small `import neo_lab` boilerplate — you don't need to touch it).
+
+```python
+import neo_lab
+
+# --- flight ---
+launcher = neo_lab.Launcher(target_height=3.0)  # arm + climb to N m above ground
+launcher.update(drone)        # call each frame; returns True once airborne & stable
+neo_lab.height(drone)         # altitude in meters above the launch ground
+
+# --- gate vision ---
+neo_lab.bright_mask(image, v_min=200)          # 0/255 mask of glowing gate edges
+neo_lab.largest_gate(image, v_min, min_area)   # biggest SQUARE glowing gate (not a line)
+neo_lab.largest_cyan_gate(image, min_area)     # biggest square CYAN gate (forward camera)
+neo_lab.gate_nearest_center(image, ...)        # gate nearest the image center
+neo_lab.gate_nearest_to(image, target_col, ...)# gate nearest a column (for tracking one gate)
+neo_lab.CYAN_LOWER, neo_lab.CYAN_UPPER         # HSV bounds for the cyan gate edges
 ```
-
-Concept labs keep `tasks/<name>.py` (blanks) and `solutions/<name>.py` (completed).
-
-## Contents
-
-### Week 2 — Vision (`labs/week2_vision/`)
-
-| Module | Source notebook | Type | Topic |
-|--------|-----------------|------|-------|
-| `module1_image_formation`   | `01_Image_Formation.ipynb`   | concept   | Pinhole camera model, projection, intrinsics, distortion |
-| `module2_opencv`            | `02_OpenCV.ipynb`            | simulator | Thresholding & morphology on the live camera feed |
-| `module3_linear_regression` | `03_LinearRegression.ipynb`  | concept + sim | Fit a line to pixels → follow a ground line |
-| `module4_downward`          | `04_Downward.ipynb`         | simulator | Contour analysis with the downward camera |
-| `module5_color_segmentation`| `05_ColorSegmentation.ipynb` | simulator | HSV color segmentation → seek a colored gate |
-
-### Week 3 — Controls (`labs/week3_controls/`)
-
-| Module | Source notebook | Type | Topic |
-|--------|-----------------|------|-------|
-| `module1_coordinate_frames` | `CoordinateFrames_and_Dynamics.ipynb` | concept   | Euler↔rotation, frame transforms, thrust sizing |
-| `module2_feedback_control`  | `simple_feedback_control.ipynb`       | concept + sim | Proportional control → altitude hold |
-| `module3_pid`               | `simple_feedback_control.ipynb`       | simulator | PID altitude hold, position hold, visual servoing |
 
 ## The drone API (quick reference)
 
@@ -80,20 +134,20 @@ drone = drone_core.create_drone()
 
 # Flight (all pcmd args in [-1, 1])
 drone.flight.takeoff()
-drone.flight.send_pcmd(pitch, roll, yaw, throttle)   # +pitch=fwd +roll=right +yaw=CW +throttle=up
-drone.flight.stop()                                  # hover
+drone.flight.send_pcmd(pitch, roll, yaw, throttle)  # +pitch=fwd +roll=right +yaw=CW +throttle=up
+drone.flight.stop()                                 # hover / hold position
 drone.flight.land()
 
 # Physics / sensors
-drone.physics.get_altitude()           # meters
+drone.physics.get_altitude()           # meters (NOT zero on the ground; use neo_lab.height)
 drone.physics.get_linear_velocity()    # (x=right, y=up, z=forward) m/s
 drone.physics.get_attitude()           # (pitch, roll, yaw) degrees; yaw in [0,360)
 
-# Cameras (numpy BGR / depth arrays)
-drone.camera.get_color_image()         # 480x640x3 forward camera
-drone.camera.get_downward_image()      # 480x640x3 downward camera
+# Cameras (numpy BGR arrays, 480x640x3)
+drone.camera.get_color_image()         # forward camera
+drone.camera.get_downward_image()      # downward camera
 
-# Vision helpers
+# Vision helpers (drone_utils)
 uav_utils.find_contours(img, hsv_lower, hsv_upper)
 uav_utils.get_largest_contour(contours, min_area)
 uav_utils.get_contour_center(contour)  # (row, col) or None
@@ -106,5 +160,44 @@ drone.set_start_update(start, update, update_slow)
 drone.get_delta_time()                 # seconds since last frame
 drone.go()
 ```
+
+---
+
+## 5. Contents
+
+### Week 2 — Vision (`labs/week2_vision/`)
+
+| Module | Type | Topic |
+|--------|------|-------|
+| `module1_image_formation`    | concept   | Pinhole camera model: projection, pixels, intrinsics, distortion |
+| `module2_opencv`             | simulator | Thresholding & morphology on the live downward camera |
+| `module3_linear_regression`  | simulator | Fit a line (least squares) to glowing edges, then follow one |
+| `module4_downward`           | simulator | Contour analysis: detect & center over a gate (downward camera) |
+| `module5_color_segmentation` | simulator | HSV color segmentation → search, center, and reach a cyan gate |
+
+### Week 3 — Controls (`labs/week3_controls/`)
+
+| Module | Type | Topic |
+|--------|------|-------|
+| `module1_coordinate_frames` | concept   | Euler↔rotation, rotation→quaternion, ENU/NED, thrust sizing |
+| `module2_feedback_control`  | concept + simulator | Proportional control → altitude hold & setpoints |
+| `module3_pid`               | simulator | PID altitude, fly-a-distance, and a vision+PID gate visual-servo |
+
+Each module folder has its own `README.md` with the details.
+
+---
+
+## 6. Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| Stuck at *"awaiting connection from UAVNeo Simulator"* | Launch the sim (`drone open_sim`). On native Linux/Mac it connects to `127.0.0.1`; if needed, force it with `DRONE_SIM_IP=127.0.0.1`. |
+| Connected, but nothing happens | Click the **sim window** and press **`Enter`** to enter user-program mode. |
+| Drone won't move / sits on the ground | It must arm and climb first — the lab's launcher handles this. If you wrote a controller, remember small commands (<~0.05) do nothing (deadband). |
+| *"every drone already has a connected Python script"* | A previous run is still attached. Stop it (Ctrl-C in its terminal) before starting a new one. |
+| `ModuleNotFoundError: neo_lab` | Run labs through `drone sim` (or from inside `labs/`) so the import path resolves. |
+| Vision finds nothing | The gates glow cyan/white — detect by brightness, not red. Use the `neo_lab` gate helpers. |
+
+---
 
 GNU General Public License v3.0

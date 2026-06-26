@@ -1,12 +1,26 @@
-# Week2 Vision — Module1 Image Formation
+# Week 2 · Module 1 — Image Formation
 
-Pinhole camera model: perspective projection, pixel conversion, intrinsic matrix, pose projection, radial distortion.
+The pinhole camera model: how a 3-D point in the world becomes a pixel. This is pure math — no simulator needed.
 
-## Concept lab (no simulator)
+## What you'll learn
+
+- Perspective projection (x = f·X/Z)
+- Converting image-plane meters to pixels
+- Building the camera intrinsic matrix K
+- Projecting a world point given the camera pose
+- Modeling radial (lens) distortion
+
+## How to run
 
 ```bash
-python3 tasks/image_formation.py        # your work (prints PASS/FAIL self-checks)
+python3 tasks/image_formation.py        # your work (prints PASS/FAIL)
 python3 solutions/image_formation.py    # reference
 ```
 
-Student stubs live in `tasks/`; completed references in `solutions/`.
+## What to expect
+
+Each function you complete is checked automatically; the script prints `PASS`/`FAIL` per question and a final score.
+
+---
+
+Fill in the blanks in `tasks/`; completed references are in `solutions/` (try it yourself first!).
