@@ -6,9 +6,33 @@ handle wrap-around (359 deg and 1 deg are 2 deg apart, not 358).
 
 ## What you'll learn
 
-- Reading attitude (pitch, roll, yaw) from `get_attitude()`
-- Proportional control on yaw to hold a heading
-- Handling angle wrap-around in the error term
+- **Reading attitude** — getting pitch/roll/yaw from the IMU with `get_attitude()`.
+- **Proportional yaw control** — turning to and holding a compass heading.
+- **Angle wrap-around** — computing the *shortest* turn between two headings.
+
+## How it works
+
+So far your controllers acted on distances. Heading hold acts on an **angle**, and angles wrap
+around — which quietly breaks the naive error you have used until now.
+
+**Sense orientation, not position.** The drone's **attitude** (pitch, roll, yaw) comes from the
+**IMU**, an inertial sensor independent of the camera. `get_attitude()` returns all three;
+**yaw** is the compass **heading**, the direction the nose points, in degrees `[0, 360)`.
+
+**The wrap-around trap.** To hold a heading you want the error `target − current`. But if the
+target is 10° and you are at 350°, plain subtraction says the error is −340° and the drone
+spins almost all the way around — when the real shortest turn is +20°. The fix is to wrap the
+error into `−180..180`, which always picks the short way: `((target − current + 180) % 360) −
+180`. Any time you subtract two angles, you have to do this.
+
+**Then it's just proportional control.** With a correctly wrapped error, hold heading exactly
+as you held altitude: command a yaw rate proportional to the error (gain `KP_YAW`, clamped so
+it cannot spin too fast), and count the time spent within tolerance before declaring success.
+If the drone turns the wrong way, the sign is flipped.
+
+Why it matters: wrap-around shows up wherever a robot reasons about angles — heading, joint
+limits, the bearing to a gate. Getting the "shortest angle" right once, in a reusable
+`heading_error`, spares you a whole class of spin-the-wrong-way bugs.
 
 ## Key terms
 

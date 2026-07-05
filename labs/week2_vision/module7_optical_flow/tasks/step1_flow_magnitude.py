@@ -60,19 +60,14 @@ def update(drone):
     ##################################
     #### START PUT CODE HERE #########
 
-    # Keep the drone drifting and the clock running EVERY frame; only pull the image
-    # and run flow every SKIP-th frame (that vision work is what would lag the sim).
-    # 1. drone.flight.send_pcmd(PROBE_PITCH, 0, 0, 0); _timer += drone.get_delta_time()
-    # 2. _frame += 1; only do steps 3-7 when (_frame % SKIP == 0).
-    # 3. gray = cv2.cvtColor(drone.camera.get_downward_image(), cv2.COLOR_BGR2GRAY)
-    # 4. If _prev_gray is None or you have < MIN_PTS points: _prev_pts =
-    #      cv2.goodFeaturesToTrack(gray, **FEATURE_PARAMS)   (then fall through to set _prev_gray)
-    # 5. Else track: new_pts, status, _ = cv2.calcOpticalFlowPyrLK(_prev_gray, gray,
-    #      _prev_pts, None, **LK_PARAMS); keep status==1 points; displacement = new - old
-    #      (reshape each to (-1, 2)); _last_mag = mean of sqrt(dx**2 + dy**2);
-    #      _prev_pts = good_new.reshape(-1, 1, 2)
-    # 6. _prev_gray = gray
-    # 7. When _timer >= HOVER_TIME: stop, print _last_mag, set _done = True.
+    # Keep the drone drifting (PROBE_PITCH) and the clock running EVERY frame; only pull
+    # the image and run flow every SKIP-th frame (that vision work is what would lag the
+    # sim). On a processed frame, work in grayscale: when you have no features yet (or
+    # fewer than MIN_PTS survive), detect new corners with FEATURE_PARAMS; otherwise track
+    # the previous corners into the new frame with LK_PARAMS, keep the ones that were found,
+    # and set _last_mag to their average pixel displacement. Remember the frame for next
+    # time. Finish at HOVER_TIME, printing _last_mag. See the README (Key terms) and the
+    # OpenCV sparse optical-flow functions.
 
     ###### END PUT CODE HERE #########
     ##################################

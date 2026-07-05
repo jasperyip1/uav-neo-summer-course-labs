@@ -6,9 +6,35 @@ together, which is the foundation for flying a pattern and running a gate course
 
 ## What you'll learn
 
-- Dead reckoning on three axes at once
-- Combining roll, pitch, and throttle into one position controller
-- Using a velocity (D) term to arrive without overshooting
+- **Dead reckoning on three axes** — estimating right/up/forward position from velocity.
+- **A three-axis position controller** — combining roll, pitch, and throttle at once.
+- **A velocity (D) term** — braking on approach so you arrive without overshooting.
+
+## How it works
+
+Every flying lab so far moved one axis at a time. A **waypoint** — a target point given as
+`(right, up, forward)` from the start — forces all three at once, the leap from "hold a value"
+to "go somewhere."
+
+**Know where you are.** The sim has no position sensor, so you track position by **dead
+reckoning**: integrate the velocity reading each frame, `position += velocity · dt`, on the
+right and forward axes. The velocity already arrives in the **body frame** (x=right, y=up,
+z=forward), so no rotation is needed. The estimate drifts as small errors pile up — which is
+why the arrival tolerance is generous and why real drones correct it with a camera or GPS.
+
+**Drive three axes together.** Each axis gets its own controller and its own actuator: roll for
+the right error, pitch for the forward error, throttle for the height error. Run all three
+every frame and the drone moves diagonally toward the point.
+
+**Brake so you arrive, not overshoot.** Pure proportional control on position tends to build
+speed and blow past the target. Adding a **derivative** term — `KP · error − KD · velocity` —
+turns the velocity itself into a brake: the faster you move, the harder it pulls back, so you
+ease into the waypoint instead of circling it. That is **PD control**, the P+D of PID without
+the integral.
+
+Why it matters: "estimate position, command all axes, brake on arrival" is the core of
+autonomous navigation. The next module chains waypoints into a path, and a gate course is just
+a longer version of the same loop.
 
 ## Key terms
 

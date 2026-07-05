@@ -4,9 +4,34 @@ Fit a straight line to detected pixels with least squares, then use it to steer.
 
 ## What you'll learn
 
-- Thresholding bright pixels and `np.argwhere`
-- Least-squares line fit (`np.polyfit`)
-- Turning a pixel offset into a steering (roll) command
+- **Finding bright pixels** — thresholding an edge and reading its pixel coordinates with `np.argwhere`.
+- **Least-squares line fitting** — the single best-fit straight line through a cloud of points.
+- **Pixel offset → steering** — turning "how far off-center is the edge" into a roll command.
+
+## How it works
+
+The gate edges glow, so the drone can follow one like a lane line. That takes three moves:
+see the edge, describe it with a line, and steer to stay on it.
+
+**See the edge.** Threshold the bright pixels into a mask, then `np.argwhere` hands back the
+`(row, col)` of every white pixel — a scatter of points tracing the glowing edge. (Watch the
+convention: rows are the y-axis, columns are the x-axis.)
+
+**Describe it with a line.** A cloud of edge pixels is noisy, so summarize it with the single
+straight line `y = m·x + b` that fits best. "Best" has a precise meaning: **least squares**
+picks the line that minimizes the total squared vertical distance from the points to the
+line, a balance no single outlier can hijack. `np.polyfit` returns the slope `m` and
+intercept `b`.
+
+**Steer to stay on it.** The line (or just the average column of the bright pixels) tells you
+how far the edge sits from the center of the image — the **pixel offset**. Feed that offset
+into a **proportional** roll command: far off → strong strafe back toward the edge, nearly
+centered → a gentle nudge. That is the same proportional idea you will use for altitude in
+Week 3, applied to a pixel error instead of a height error.
+
+Why it matters: fitting a model to noisy measurements and acting on it is the core loop of
+robot perception. Here it is a line and a roll command; the same pattern reappears whenever
+the drone must turn many raw pixels into one clean decision.
 
 ## Key terms
 

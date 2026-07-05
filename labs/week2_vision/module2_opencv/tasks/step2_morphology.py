@@ -44,13 +44,10 @@ def update(drone):
     ##################################
     #### START PUT CODE HERE #########
 
-    # Opening (erode then dilate) removes small speckles but keeps big shapes.
-    # - image = drone.camera.get_downward_image()
-    # - Build a binary mask the same way as Step 1 (grayscale -> threshold).
-    # - kernel = np.ones((KERNEL_SIZE, KERNEL_SIZE), np.uint8)
-    # - Apply cv2.erode then cv2.dilate with that kernel.
-    # - np.count_nonzero before vs after tells you how many pixels were removed.
-    # _timer += drone.get_delta_time(); finish (_done = True) once _timer >= HOVER_TIME.
+    # Opening (erode then dilate) removes small speckles but keeps big shapes. Build a
+    # binary mask like Step 1, then open it with a KERNEL_SIZE square kernel and compare
+    # the white-pixel count before and after to see what was removed. Advance _timer and
+    # finish once it reaches HOVER_TIME. See the README (Key terms) for morphology.
 
     ###### END PUT CODE HERE #########
     ##################################

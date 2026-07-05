@@ -47,12 +47,10 @@ def update(drone):
     ##################################
     #### START PUT CODE HERE #########
 
-    # 1. dt = drone.get_delta_time()
-    # 2. vx, vy, vz = drone.physics.get_linear_velocity()   # x=right, y=up, z=forward
-    # 3. _x += vx * dt ; _z += vz * dt           # integrate horizontal velocity
-    # 4. Nudge diagonally so it moves: drone.flight.send_pcmd(PROBE_PITCH, PROBE_ROLL, 0, 0)
-    # 5. _timer += dt; when _timer >= REPORT_TIME: stop, print (_x, height, _z) using
-    #    neo_lab.height(drone) for the up axis, and set _done = True.
+    # Dead reckoning: read drone.physics.get_linear_velocity() (vx=right, vy=up,
+    # vz=forward) and integrate the horizontal components into (_x, _z) each frame. Nudge
+    # diagonally with PROBE_PITCH/PROBE_ROLL so the drone moves. After REPORT_TIME, stop,
+    # print the position (use neo_lab.height(drone) for the up axis), and set _done.
 
     ###### END PUT CODE HERE #########
     ##################################

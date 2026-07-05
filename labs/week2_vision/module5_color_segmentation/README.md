@@ -4,10 +4,37 @@ Segment the cyan gates from the blue background, then search for, center, and ap
 
 ## What you'll learn
 
-- HSV color masking (`cv2.inRange`) for cyan vs. the blue wall
-- Bounding boxes (`cv2.boundingRect`)
-- Filtering to gate-shaped (square) contours
-- Yaw-to-center then approach control
+- **HSV color masking** — isolating the cyan gates from the blue wall by hue, robust to lighting.
+- **Bounding boxes** — the upright rectangle around a contour, and its width/height.
+- **Shape filtering** — keeping only gate-shaped (square) contours, rejecting the glowing lines.
+- **Yaw-to-center then approach** — turning to face a gate before driving toward it.
+
+## How it works
+
+Color detection sounds easy until the lighting changes. This module picks a color the robust
+way, then turns "I see a gate" into "fly to it."
+
+**Pick the color in HSV, not BGR.** Raw camera pixels are Blue/Green/Red, but brightness is
+smeared across all three channels, so a shadow shifts all of them at once. **HSV** separates
+**H**ue (which color), **S**aturation (how vivid), and **V**alue (how bright). Choosing by
+hue means a shadowed cyan and a bright cyan share almost the same H, so a hue range
+(`CYAN_LOWER..CYAN_UPPER`) reliably grabs the gate and rejects the blue wall beside it.
+`cv2.inRange` returns a binary mask of the in-range pixels — **color segmentation**.
+
+**Describe the blob with a box.** The largest cyan contour gets a **bounding box**
+`(x, y, w, h)` — the smallest upright rectangle around it. Its center says where the gate is;
+its width `w` says how big it looks (Module 6 turns that into distance). The long glowing
+boundary lines are also cyan, so a shape filter keeps only roughly square contours: a real
+gate has an **aspect ratio** near 1, a boundary line is very elongated.
+
+**Turn to face, then approach.** The horizontal gap between the box center and the image
+center is a yaw error — **yaw** (rotate in place) to close it. Only once the gate is roughly
+centered do you add forward **pitch**, or you drive past it at an angle. With no gate in
+view, spin slowly to search. That "search → center → approach" loop is the skeleton of gate
+racing.
+
+Why it matters: choosing features that survive lighting changes, then sequencing search /
+aim / approach, is exactly what the drone does to fly a course of gates.
 
 ## Key terms
 

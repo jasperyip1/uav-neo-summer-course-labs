@@ -61,12 +61,11 @@ def update(drone):
     # Tools: drone.physics.get_linear_velocity() -> (vx, vy, vz); drone.get_delta_time();
     #        neo_lab.height(drone); uav_utils.clamp(...); drone.flight.send_pcmd(...).
     #
-    # Track right/forward position by integrating vx, vz like Step 1. For each
-    # horizontal axis use a PD command: KP_POS * error - KD_POS * velocity (the
-    # velocity term brakes you). roll drives the right error, pitch the forward error,
-    # throttle the height error (ALT_KP * (TARGET_HEIGHT - height)). Clamp each. Finish
-    # when both horizontal errors are under POS_TOL and the speed is under SETTLE_SPEED
-    # for HOLD_TIME.
+    # Track right/forward position by integrating vx, vz like Step 1. Drive each
+    # horizontal axis with a PD controller (gain KP_POS on position error and KD_POS on
+    # velocity, which brakes you): roll for the right error, pitch for the forward error.
+    # Hold height with a proportional term (ALT_KP). Clamp each to its limit. Finish when
+    # both horizontal errors are under POS_TOL and speed is under SETTLE_SPEED for HOLD_TIME.
 
     ###### END PUT CODE HERE #########
     ##################################

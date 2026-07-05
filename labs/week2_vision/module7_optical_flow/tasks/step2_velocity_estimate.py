@@ -63,17 +63,17 @@ def update(drone):
     # GOAL: print an estimated horizontal velocity from optical flow next to the true
     # velocity, so you can see how well vision tracks motion.
     #
-    # Tools: drone.camera.get_downward_image(); cv2.goodFeaturesToTrack(gray, **FEATURE_PARAMS);
-    #        cv2.calcOpticalFlowPyrLK(prev, gray, pts, None, **LK_PARAMS); neo_lab.height(drone);
-    #        drone.physics.get_linear_velocity(); drone.get_delta_time(); send_pcmd(...).
+    # Tools: drone.camera.get_downward_image(); neo_lab.height(drone);
+    #        drone.physics.get_linear_velocity(); drone.get_delta_time(); send_pcmd(...);
+    #        plus the sparse optical-flow tracking you built in Step 1.
     #
     # Every frame: drift (PROBE_PITCH), add dt to _timer AND to _interval, and _frame += 1.
     # Only every SKIP-th frame: track corner points (sparse flow, like Step 1) and average
-    # the kept points' displacement to a mean (dx, dy). One pixel covers
-    # meters_per_pixel = 2 * height * HFOV_TAN / IMAGE_WIDTH on the ground, so the velocity
-    # estimate is mean_d * meters_per_pixel / _interval (use _interval, the time between
-    # PROCESSED frames, not one dt), then reset _interval = 0. The camera moves opposite the
-    # scene flow (sign flip). Finish at RUN_TIME, printing the estimate vs. true velocity.
+    # the kept points' displacement in pixels. Convert that to meters/second: one pixel's
+    # ground footprint grows with height and the camera's field of view (use HFOV_TAN and
+    # IMAGE_WIDTH), and divide by _interval (the time between PROCESSED frames, not one dt);
+    # then reset _interval. The camera moves opposite the scene flow (sign flip). Finish at
+    # RUN_TIME, printing the estimate vs. true velocity. See the README (Key terms).
 
     ###### END PUT CODE HERE #########
     ##################################

@@ -4,9 +4,37 @@ Your first closed-loop controller: proportional control. Warm up on a 1-D math m
 
 ## What you'll learn
 
-- The proportional law: command = Kp · error
-- Why a P-only controller leaves a small steady-state error
-- Driving the drone's throttle from an altitude error
+- **The proportional law** — a command proportional to the error, `command = Kp · error`.
+- **Steady-state error** — why a P-only controller settles a little short of the target.
+- **Throttle from altitude error** — closing the loop on the real drone's height.
+
+## How it works
+
+This is your first **closed-loop controller**: instead of commanding a throttle and hoping,
+you measure the height, compare it to the target, and correct — every frame, forever.
+
+**Error drives everything.** The **error** is `target − measured` (here `TARGET_HEIGHT −
+current_height`). It is positive when you are too low, negative when too high, zero on the
+**setpoint**. A controller is just a rule for turning that error into a command.
+
+**Proportional control.** The simplest rule: make the command proportional to the error,
+`command = Kp · error`. Far below the target → a big throttle up; almost there → a gentle one;
+on target → nothing. The **gain** `Kp` is the one knob: too small and the drone crawls to the
+target, too large and it overshoots and oscillates. Because throttle here sets vertical
+*speed*, `Kp` has to stay small.
+
+**The catch: steady-state error.** As the drone nears the target the error shrinks, so the
+command shrinks — until it is too weak to close the final gap against gravity (and the
+throttle deadband). The drone parks slightly low and stays there. That permanent droop is
+**steady-state error** — not a bug in your code but the fundamental limitation of P-only
+control. Module 3's integral term is the fix.
+
+**Step response.** Step 2 chases a sequence of heights. Watching how the drone reacts when the
+target suddenly jumps — the **step response** — is how control engineers judge a controller:
+how fast it rises, whether it overshoots, how long it takes to settle.
+
+Why it matters: proportional control is the atom of feedback. Every loop you build after this —
+PID altitude, heading hold, waypoints — starts from `Kp · error` and adds to it.
 
 ## Key terms
 

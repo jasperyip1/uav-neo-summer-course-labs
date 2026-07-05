@@ -4,9 +4,36 @@ Core image-processing operations applied to the drone's live downward camera.
 
 ## What you'll learn
 
-- Grayscale + binary thresholding (`cv2.threshold`)
-- Cleaning a mask with erosion/dilation (morphological opening)
-- Blurring and Sobel edge detection
+- **Grayscale + binary thresholding** — reducing a color image to just the pixels you care about.
+- **Morphological opening (erosion + dilation)** — cleaning speckle noise out of a mask.
+- **Blurring and Sobel edges** — smoothing an image, then measuring where brightness changes.
+
+## How it works
+
+Raw camera images are noisy and full of color and texture the drone does not care about.
+These operations boil an image down to a clean answer to a yes/no question — "is this pixel
+part of the thing I want?"
+
+**Thresholding.** First drop color: a **grayscale** image keeps only brightness (0–255) per
+pixel. Then pick a cutoff — every pixel brighter than `THRESHOLD_VALUE` becomes white, the
+rest black. The result is a **binary mask** marking the bright gate edges. The cutoff
+matters: too high and the mask is empty, too low and the whole floor lights up.
+
+**Morphology.** A threshold leaves stray specks — a few bright pixels of noise. Morphology
+cleans them with a small sliding window (the **kernel**). **Erosion** peels a layer of white
+off every region, deleting specks entirely but also shrinking real shapes; **dilation** adds
+a layer back. Erosion *then* dilation is an **opening**: the specks vanish (erosion killed
+them, and nothing is left to grow back) while the big shapes return to roughly their original
+size.
+
+**Blur and edges.** Averaging each pixel with its neighbors (**blur**) smooths out
+single-pixel noise. A **Sobel filter** then measures how fast brightness changes in a
+direction — run it left-to-right and top-to-bottom and combine the two, and large values
+trace the *edges* in the image. Blurring first keeps noise from registering as fake edges.
+
+Why it matters: a clean binary mask is the input to almost everything that follows —
+counting pixels, finding contours, fitting a line, measuring a gate. Garbage in the mask
+means garbage in the control loop.
 
 ## Key terms
 

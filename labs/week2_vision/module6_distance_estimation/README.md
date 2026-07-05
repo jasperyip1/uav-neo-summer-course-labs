@@ -6,9 +6,35 @@ projects to a pixel width that shrinks with distance, so distance is recoverable
 
 ## What you'll learn
 
-- The inverse of perspective projection: recovering distance from apparent size
-- Why a known object size plus focal length gives range from a single camera
-- Driving forward speed from an estimated distance
+- **Inverting perspective projection** — recovering distance from how big something looks.
+- **Monocular range from a known size** — why one camera plus a known width gives distance.
+- **Distance-driven approach** — using the estimate to decide when to stop.
+
+## How it works
+
+Module 1 projected a known 3-D size *down* to a pixel width. This module runs that arrow
+*backward*: if you already know how wide the gate really is, its pixel width tells you how
+far away it is.
+
+**Size shrinks with distance.** From the pinhole model, an object of real width `W` at
+distance `d` projects to a pixel width `w = FOCAL_PX · W / d`. Every term but `d` is known:
+`W` is the gate's true width (`REAL_GATE_WIDTH`), `FOCAL_PX` is the camera's focal length in
+pixels, and `w` you measure from the bounding box. Solve for the unknown and you get
+**monocular range**: `d = FOCAL_PX · W / w`. One camera, no stereo, no depth sensor — just a
+known size.
+
+**Where FOCAL_PX comes from.** It is the focal length expressed in pixels, set by the image
+width and the **field of view**: for a 640-pixel image with a ~90° horizontal FOV it is about
+320 (half the width divided by `tan(½ FOV)`). A wider FOV means a smaller `FOCAL_PX`.
+
+**Fly by the estimate.** Each frame, measure the width, compute the distance, and act on it:
+keep the gate centered with yaw, add forward pitch to approach, and stop once the distance
+drops to `STOP_DIST`. The estimate is only as good as your `W` and `FOCAL_PX`, so a wrong
+constant shows up as a wrong stopping distance.
+
+Why it matters: recovering 3-D information (range) from a 2-D image with a known reference is
+a workhorse trick in robotics — the same idea behind sizing an AprilTag or a person from a
+single camera.
 
 ## Key terms
 

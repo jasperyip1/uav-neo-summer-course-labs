@@ -2,12 +2,67 @@
 
 Full PID control, and a capstone that combines Week 2 vision with Week 3 control.
 
+In Module 2 you held altitude with a proportional controller and watched it settle a
+little short of the target — a permanent gap that never closed. This module fixes that
+gap and adds damping, so the drone reaches a setpoint quickly *and* sits on it exactly.
+The same three-term controller (PID) is the workhorse behind nearly every altitude,
+position, and heading loop on a real drone.
+
 ## What you'll learn
 
-- The PID law (P + I + D) and anti-windup
-- Why the integral term removes steady-state error
-- Estimating distance by integrating velocity (dead reckoning)
-- Visual-servoing: closing a PID loop on a camera pixel error
+- **The PID law (P + I + D)** — how three simple terms combine into one controller that is
+  fast, accurate, and stable.
+- **Why the integral term removes steady-state error** — the reason a P-only controller
+  droops, and how the I term erases the gap.
+- **What the derivative term does** — how reacting to the *rate* of error damps overshoot.
+- **Anti-windup** — why the integral has to be clamped, and what goes wrong if it isn't.
+- **Dead reckoning** — estimating how far you have travelled by integrating velocity when
+  there is no position sensor.
+- **Visual servoing** — closing a PID loop on a *camera pixel* error instead of a physical
+  distance, so the drone steers using what it sees.
+
+## How PID control works
+
+A feedback controller has one job: look at the **error** (how far you are from the target)
+and decide what command to send. PID builds that command from three terms, each answering
+a different question about the error.
+
+**Proportional (P) — "how far off am I right now?"**
+The P term is just `Kp · error`: a big error gives a big correction, and the push shrinks
+as you close in. On its own, P has a flaw. To counteract a constant pull — gravity acting
+on the throttle, for instance — it needs to output a non-zero command, but it only
+*produces* one when there is a non-zero error. So it parks a little short of the target
+forever. That leftover gap is the **steady-state error**.
+
+**Integral (I) — "how long have I been off?"**
+The I term sums the error over time: `Ki · Σ(error · dt)`. Even a tiny, constant error
+keeps accumulating, so the integral grows and pushes harder until the error is driven to
+*zero* — erasing the gap P leaves behind. The hazard: if the drone stays far from target
+for a while, the integral can balloon and then violently overshoot once it catches up.
+**Anti-windup** clamps the accumulated integral to a fixed range (`INT_CLAMP`) so it can
+never wind that far up.
+
+**Derivative (D) — "how fast is the error changing?"**
+The D term is `Kd · d(error)/dt`. If the error is collapsing quickly you are about to
+overshoot, so D pushes back to slow the approach — a shock absorber that trades a little
+speed for much less overshoot and oscillation. D amplifies noise, so it is usually the
+smallest gain.
+
+Together: `output = Kp·error + Ki·∫error dt + Kd·d(error)/dt`. Tuning is the art of
+balancing them: raise `Kp` for a faster response, add `Ki` to kill the steady-state gap,
+add `Kd` to tame the overshoot that more `Kp` and `Ki` create.
+
+**Dead reckoning (Step 2).** The sim reports velocity but not forward position, so you
+estimate position by *integrating* velocity — `position += velocity · dt` every frame,
+the same idea as the integral term. It works, but small velocity errors pile up, so the
+estimate slowly drifts. That drift is a real limitation of navigating without a position
+fix, and it is why real drones fuse in GPS or a camera.
+
+**Visual servoing (Step 3).** The error need not be a distance in meters. Here it is a
+*pixel* offset: how far the gate's center sits from the middle of the image. Feed that
+pixel error through the same PID to command yaw, and the drone turns until the gate is
+centered. This is the bridge between Week 2 (finding things in images) and Week 3
+(controlling the drone): vision produces the error, the controller acts on it.
 
 ## Key terms
 

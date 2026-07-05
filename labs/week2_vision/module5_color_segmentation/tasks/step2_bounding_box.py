@@ -45,13 +45,10 @@ def update(drone):
     ##################################
     #### START PUT CODE HERE #########
 
-    # The long glowing boundary lines are also cyan, so use the gate helper, which
-    # keeps only square-ish (gate-shaped) contours.
-    # 1. image = drone.camera.get_color_image()
-    # 2. best = neo_lab.largest_cyan_gate(image, MIN_AREA)   # or None
-    # 3. If best is None -> return False.
-    # 4. x, y, w, h = cv2.boundingRect(best)
-    # 5. _timer += drone.get_delta_time(); print the box, finish at HOVER_TIME.
+    # The long glowing boundary lines are also cyan, so use neo_lab.largest_cyan_gate(
+    # image, MIN_AREA), which keeps only square-ish (gate-shaped) contours; it returns None
+    # when there is no gate -> return False. Otherwise find the contour's bounding box and
+    # print it. Advance _timer and finish at HOVER_TIME.
 
     ###### END PUT CODE HERE #########
     ##################################

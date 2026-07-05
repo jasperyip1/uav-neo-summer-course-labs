@@ -48,10 +48,9 @@ def update(drone):
     # GOAL: hold each height in SETPOINTS in turn, moving to the next once you have
     # stayed within TOL of the current one for HOLD_TIME. Finish after the last.
     #
-    # This is your Step 1 proportional controller (throttle = clamp(KP * error)) with
-    # one change: the target is SETPOINTS[_index] instead of a fixed value, and you
-    # advance _index after holding each one. Stop and set _done once _index runs past
-    # the end of the list.
+    # This is your Step 1 proportional controller with one change: the target is
+    # SETPOINTS[_index] instead of a fixed value, and you advance _index after holding
+    # each one. Stop and set _done once _index runs past the end of the list.
 
     ###### END PUT CODE HERE #########
     ##################################

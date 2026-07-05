@@ -5,9 +5,37 @@ downward camera. This is how many real drones hold position indoors without GPS.
 
 ## What you'll learn
 
-- What optical flow is, and sparse feature tracking (`cv2.goodFeaturesToTrack` + `cv2.calcOpticalFlowPyrLK`)
-- Why downward-camera flow encodes ground speed
-- Converting pixel motion to a metric velocity using altitude
+- **What optical flow is** — the apparent motion of the image between two frames.
+- **Sparse feature tracking** — following a few corner points (Lucas-Kanade) instead of every pixel.
+- **Flow → velocity** — converting pixel motion to a real ground speed using altitude and time.
+
+## How it works
+
+Indoors there is no GPS, but the downward camera still sees the ground slide past — and how
+fast it slides is how fast the drone is moving. Optical flow turns that sliding into a
+velocity.
+
+**Flow is image motion.** **Optical flow** is the apparent `(dx, dy)` shift of image patterns
+between two frames. Computing it for every pixel (**dense** flow) is expensive and lags the
+sim, so this lab uses **sparse** flow: `goodFeaturesToTrack` picks a handful of distinctive
+**corners**, and `calcOpticalFlowPyrLK` (Lucas-Kanade) finds where each moved next frame. The
+average displacement of the surviving points is the flow.
+
+**Flow encodes ground speed — but in pixels.** A larger **flow magnitude**
+(`sqrt(dx² + dy²)`) means faster apparent motion. Getting to meters per second takes two
+conversions. First, how much ground one pixel covers — the **footprint** — which grows with
+altitude: `meters_per_pixel = 2 · height · tan(½ FOV) / image_width` (fly higher and each
+pixel spans more ground). Second, divide by the time between processed frames to turn
+pixels-per-frame into a rate. One sign detail: the camera moves *opposite* to the scene flow,
+so the estimate is negated.
+
+**Why the FlightDemo world.** Flow needs texture to track. A blank floor gives near-zero flow
+even while moving, so run this in the textured **FlightDemo** world — flow ≈ 0 over bare
+ground is the scene, not your code.
+
+Why it matters: this is real **optical-flow velocity estimation**, the same sensor many drones
+use to hold position indoors. It also drifts over time, which is the motivation for sensor
+fusion — the theme that ties Week 2 sensing to Week 4 integration.
 
 ## Key terms
 

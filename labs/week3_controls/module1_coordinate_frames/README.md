@@ -4,10 +4,40 @@ The rotation math behind a drone: orientation representations and frame transfor
 
 ## What you'll learn
 
-- Euler angles → rotation matrix (aerospace ZYX)
-- Rotation matrix → quaternion
-- ENU ↔ NED frame conversion
-- Sizing rotor thrust for hover
+- **Euler angles → rotation matrix** — building a 3×3 rotation from roll/pitch/yaw (aerospace ZYX).
+- **Rotation matrix → quaternion** — the four-number orientation flight controllers prefer.
+- **ENU ↔ NED** — converting between the robotics and aerospace axis conventions.
+- **Sizing rotor thrust for hover** — how much force the motors must make to fight gravity.
+
+## How it works
+
+A drone constantly answers "which way am I pointing, and how do I turn a direction in one
+frame into another?" This module is the orientation math behind that — no flying, just the
+tools every controller quietly relies on.
+
+**Orientation as three turns.** **Euler angles** (roll, pitch, yaw) describe orientation as
+three successive rotations about three axes. Aerospace uses the **ZYX** order: yaw about the
+vertical axis, then pitch, then roll. Composing the three elementary rotations into one
+**rotation matrix** `R` (as `Rz · Ry · Rx`) gives a single object that re-expresses any
+vector in the rotated frame via `R @ v`. Euler angles are intuitive but have a failure mode —
+**gimbal lock**, where two axes line up and a degree of freedom is lost.
+
+**Why quaternions.** To dodge gimbal lock, flight controllers store orientation internally as
+a **quaternion** — four numbers `(x, y, z, w)`. You will convert a rotation matrix to one with
+the standard trace method. You do not need to love quaternions; you need to know they are the
+same rotation in a form with no singularities.
+
+**Frames disagree on axes.** Robotics often uses **ENU** (x=East, y=North, z=Up); aerospace
+uses **NED** (x=North, y=East, z=Down). The same physical direction has different numbers in
+each, so converting is a matter of swapping and negating axes. Get it wrong and a sign flips
+downstream, sending the drone the wrong way.
+
+**Enough thrust to hover.** Dynamics enters through one number: to hover, the rotors must
+produce an upward force equal to the drone's weight, `m · g`, split across four motors. That
+sets the baseline every altitude controller pushes above or below.
+
+Why it matters: rotations and frame conversions are the connective tissue of the whole stack —
+camera, IMU, and control all report in different frames, and this math is how they agree.
 
 ## Key terms
 

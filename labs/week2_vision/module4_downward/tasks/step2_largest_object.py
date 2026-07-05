@@ -44,12 +44,10 @@ def update(drone):
     ##################################
     #### START PUT CODE HERE #########
 
-    # 1. image = drone.camera.get_downward_image()
-    # 2. best = neo_lab.largest_bright_contour(image, V_MIN, MIN_AREA)   # or None
-    # 3. If best is None nothing is bright enough yet -> return False.
-    # 4. center = uav_utils.get_contour_center(best)   # (row, col)
-    #    area   = uav_utils.get_contour_area(best)
-    # 5. _timer += drone.get_delta_time(); print center and area, finish at HOVER_TIME.
+    # Find the largest bright contour with neo_lab.largest_bright_contour(image, V_MIN,
+    # MIN_AREA); if it returns None nothing is bright enough yet -> return False. Otherwise
+    # report its center and area (see uav_utils for contour helpers). Advance _timer and
+    # finish at HOVER_TIME.
 
     ###### END PUT CODE HERE #########
     ##################################

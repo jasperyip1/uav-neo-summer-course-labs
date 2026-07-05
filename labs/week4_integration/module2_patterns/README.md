@@ -6,9 +6,32 @@ position controller actually composes into a longer route.
 
 ## What you'll learn
 
-- Sequencing waypoints into a path
-- Advancing to the next target when the current one is reached
-- Reusing a single-point controller across a whole route
+- **Sequencing waypoints** — turning an ordered list of points into a flight path.
+- **Advancing on arrival** — switching to the next target once the current one is reached.
+- **Reusing one controller** — driving a whole route with the single-point controller from Module 1.
+
+## How it works
+
+A flight **path** is nothing more than a list of waypoints visited in order. This module flies
+a square, and the real lesson is that a controller which nails *one* point should compose into
+a *route* with no new control math.
+
+**A path is a list of legs.** Store the corners as waypoints; the drone flies one **leg** at a
+time, from the current corner to the next. All the work is bookkeeping: an index `_wp` pointing
+at the corner you are currently chasing.
+
+**Advance when you arrive.** Reuse the Module 1 waypoint controller unchanged to fly toward
+`WAYPOINTS[_wp]`. The only new rule is the **waypoint-advance** test: once you are within
+`WP_TOL` of the current corner on both axes, increment `_wp` to aim at the next. When the index
+runs past the last corner, the path is done.
+
+**Watch it compose.** This is really a test of **composability** — whether small errors that
+were harmless on one leg stay harmless over four. Dead-reckoning drift and a little overshoot
+accumulate, so the drone may finish noticeably off from where it started. That accumulation is
+the honest limitation of open-loop position tracking, and noticing it is part of the point.
+
+Why it matters: a gate course, a search pattern, a survey grid — all just ordered waypoints.
+Once one controller composes into a path, the drone can fly any route you can list.
 
 ## Key terms
 

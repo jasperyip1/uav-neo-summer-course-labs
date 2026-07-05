@@ -13,10 +13,10 @@ import numpy as np
 
 
 def p_control(y_err, kp):
-    """Proportional control law:  command = kp * error."""
+    """Return the proportional control command for the given error and gain (see README, Key terms)."""
     ##################################
     #### START PUT CODE HERE #########
-    return 0.0  # YOUR CODE HERE (return kp * y_err)
+    return 0.0
     ###### END PUT CODE HERE #########
     ##################################
 

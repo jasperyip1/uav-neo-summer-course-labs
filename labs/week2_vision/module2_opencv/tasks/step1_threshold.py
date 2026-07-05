@@ -43,12 +43,10 @@ def update(drone):
     ##################################
     #### START PUT CODE HERE #########
 
-    # 1. _timer += drone.get_delta_time()
-    # 2. image = drone.camera.get_downward_image()
-    # 3. gray  = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # 4. _, binary = cv2.threshold(gray, THRESHOLD_VALUE, 255, cv2.THRESH_BINARY)
-    # 5. white_frac = np.count_nonzero(binary) / binary.size
-    # 6. When _timer >= HOVER_TIME: print the fraction and set _done = True
+    # Grab the downward image (drone.camera.get_downward_image()), convert it to
+    # grayscale, and threshold at THRESHOLD_VALUE to make a binary mask. Report the
+    # fraction of white pixels. Advance _timer and finish (_done) once it reaches
+    # HOVER_TIME. See the README (Key terms) for thresholding.
 
     ###### END PUT CODE HERE #########
     ##################################

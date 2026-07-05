@@ -4,10 +4,35 @@ Find a gate beneath the drone with contour analysis and hover directly over it.
 
 ## What you'll learn
 
-- Building a mask of the glowing gate edges
-- `cv2.findContours` and picking the largest
-- Contour centroid + area
-- Visual-servoing with pitch/roll to center on a target
+- **Masking the glowing gate** — isolating the bright gate edges below the drone.
+- **Contours** — finding connected blobs with `cv2.findContours` and picking the largest.
+- **Centroid + area** — reducing a blob to a center point and a size.
+- **Visual servoing** — using pitch/roll to drive the gate's pixel error to zero.
+
+## How it works
+
+Once you have a binary mask of the bright pixels, you still need to answer "*where* is the
+gate, and how do I fly over it?" Contours turn the mask into objects, and a control loop
+turns an object's position into motion.
+
+**From pixels to objects.** `cv2.findContours` traces the outline of each connected white
+blob and returns them as lists of boundary points — one **contour** per object. Real scenes
+have several blobs (noise, partial gates), so rank them by **area** (the pixels each
+encloses) and keep the largest. That one filtering step rejects most noise for free.
+
+**Reduce the object to a point.** A control loop cannot act on a whole contour, so collapse
+it to its **centroid** — the average of its pixels, `(row, col)`. Now the gate is a single
+point in the image.
+
+**Servo onto it.** The **pixel error** is how far that centroid sits from the image center
+`(240, 320)`. **Visual servoing** drives that error to zero: command **pitch** (forward/back)
+from the row error and **roll** (left/right) from the column error, each scaled down so the
+drone eases in. Which sign centers the drone depends on how the camera is mounted, so pick a
+sign, watch which way it runs, and flip it if it diverges.
+
+Why it matters: "detect an object, reduce it to an error, close a loop on that error" is the
+same recipe the forward-camera gate labs and the Week 3 visual-servo capstone use. Master it
+here on the easy downward view and the harder cases follow.
 
 ## Key terms
 

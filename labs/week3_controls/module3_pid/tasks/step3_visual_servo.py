@@ -42,10 +42,10 @@ _hold = 0.0
 _done = False
 
 def pid_control(err, err_int, err_dot, kp, ki, kd):
-    """Standard PID law: output = kp*err + ki*err_int + kd*err_dot."""
+    """Return the PID controller output from the three gain terms (see README, Key terms)."""
     ##################################
     #### START PUT CODE HERE #########
-    output = 0.0  # YOUR CODE HERE (combine the three gain terms)
+    output = 0.0
     ###### END PUT CODE HERE #########
     ##################################
     return output
@@ -69,16 +69,14 @@ def update(drone):
     # GOAL: yaw with a PID loop so a glowing gate stays centered in the forward
     # camera; finish once it is centered (abs(error) < CENTER_TOL) for HOLD_TIME.
     #
-    # Tools: drone.camera.get_color_image(); drone.get_delta_time();
-    #        neo_lab.gate_nearest_center(image, V_MIN, MIN_AREA) to first acquire a gate;
-    #        neo_lab.gate_nearest_to(image, _target_col, V_MIN, MIN_AREA) to keep
-    #        following that same gate as you turn; uav_utils.get_contour_center;
-    #        uav_utils.clamp; your pid_control() above.
+    # Available helpers: drone.camera.get_color_image(); drone.get_delta_time();
+    #   neo_lab.gate_nearest_center(...) and neo_lab.gate_nearest_to(...) to find gates;
+    #   uav_utils.get_contour_center; uav_utils.clamp; your pid_control() above.
     #
-    # Lock onto ONE gate: store its column in _target_col and follow the gate nearest
-    # that column each frame, so the target does not jump between gates. The normalized
-    # error is (col - COL_CENTER) / COL_CENTER; feed it through PID to a yaw command
-    # (clamped to MAX_YAW). With no gate in view, spin at SEARCH_YAW and clear _target_col.
+    # Lock onto ONE gate (store its column in _target_col) so the target does not jump
+    # between gates. Turn the gate's horizontal offset from the image center into a
+    # normalized error, PID it to a yaw command clamped to MAX_YAW, and sweep at SEARCH_YAW
+    # when no gate is in view. See the README (Key terms) and Week 2 for finding gates.
 
     ###### END PUT CODE HERE #########
     ##################################

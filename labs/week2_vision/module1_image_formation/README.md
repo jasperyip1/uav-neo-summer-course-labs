@@ -4,11 +4,42 @@ The pinhole camera model: how a 3-D point in the world becomes a pixel. This is 
 
 ## What you'll learn
 
-- Perspective projection (x = f·X/Z)
-- Converting image-plane meters to pixels
-- Building the camera intrinsic matrix K
-- Projecting a world point given the camera pose
-- Modeling radial (lens) distortion
+- **Perspective projection** — how dividing by depth (`/Z`) makes distant things look smaller.
+- **Meters → pixels** — converting a position on the sensor into a pixel coordinate.
+- **The intrinsic matrix K** — packaging focal length and principal point into one 3×3 matrix.
+- **Projecting a world point** — combining the camera's pose (R, t) with K to find a pixel.
+- **Radial (lens) distortion** — how real lenses bend straight lines near the frame edges.
+
+## How it works
+
+A camera turns a 3-D world into a 2-D grid of pixels. The **pinhole model** is the simple
+rule for that: imagine every ray of light passing through one tiny hole and landing on a
+flat sensor behind it. Two ideas fall out of that picture.
+
+**Things shrink with distance.** A point at camera-frame position `(X, Y, Z)` lands on the
+sensor at `x = f·X/Z`, `y = f·Y/Z`. The `/Z` is the whole reason perspective works: double
+the distance, halve the apparent size. `f`, the **focal length**, is how far the sensor
+sits behind the pinhole — a longer `f` zooms in.
+
+**Sensor meters become pixels.** The projection gives a position in meters on the sensor,
+but a pixel grid needs integers. Divide by the physical width of one pixel and shift by the
+**principal point** `(cx, cy)` — the pixel where the optical axis hits the sensor — to get
+`(u, v)`. Bundling focal length and principal point into a 3×3 matrix gives the **intrinsic
+matrix K**, so a single `K @ point` does the camera → pixel step.
+
+**World points need the camera's pose.** A point given in *world* coordinates must first be
+expressed in the *camera's* frame: rotate and translate it by the pose `(R, t)`
+(`p_cam = R·p_world + t`), then apply `K`. The result is homogeneous, so you divide by the
+third coordinate at the end to land on the pixel.
+
+**Real lenses aren't perfect pinholes.** They bend straight lines outward or inward near the
+edges (**radial distortion**), which the `k1, k2` coefficients model as a stretch that grows
+with distance from the image center. Robotics code usually *undistorts* an image before
+measuring anything in it.
+
+Why it matters: every later vision lab — following an edge, centering on a gate, estimating
+range — depends on this map between pixels and the world. Module 6 literally runs it backward
+to recover distance from a gate's pixel width.
 
 ## Key terms
 

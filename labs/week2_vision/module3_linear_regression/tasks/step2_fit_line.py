@@ -32,14 +32,10 @@ _done  = False
 
 def fit_line(points):
     """Least-squares fit of y = m*x + b. points is the (row, col) array from
-    np.argwhere, so column = x and row = y."""
+    np.argwhere, so column = x and row = y. See the README (Key terms) for the fit."""
     ##################################
     #### START PUT CODE HERE #########
-    # 1. points = points.astype(np.float64)   # int -> float so the fit is exact
-    # 2. xs = points[:, 1]   (columns are x)
-    #    ys = points[:, 0]   (rows are y)
-    # 3. m, b = np.polyfit(xs, ys, 1)
-    m, b = 0.0, 0.0  # YOUR CODE HERE
+    m, b = 0.0, 0.0
     ###### END PUT CODE HERE #########
     ##################################
     return m, b
@@ -58,12 +54,10 @@ def update(drone):
     ##################################
     #### START PUT CODE HERE #########
 
-    # 1. image = drone.camera.get_downward_image()
-    # 2. Build the bright-edge mask like Step 1, then points = np.argwhere(mask)
-    #    to get the (row, col) of every bright pixel.
-    # 3. If len(points) < MIN_PIXELS there is not enough edge to fit -> return False.
-    # 4. m, b = fit_line(points)             # implement fit_line above first
-    # 5. _timer += drone.get_delta_time(); print m, b and finish at HOVER_TIME.
+    # Build the bright-edge mask like Step 1 and collect the (row, col) of every bright
+    # pixel. If there are fewer than MIN_PIXELS, there is not enough edge to fit -> return
+    # False. Otherwise call fit_line() and print m, b. Advance _timer and finish at
+    # HOVER_TIME.
 
     ###### END PUT CODE HERE #########
     ##################################

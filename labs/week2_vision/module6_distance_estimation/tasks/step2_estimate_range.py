@@ -6,10 +6,9 @@ Week 2 · Module 6 — Step 2: Estimate Range and Approach
 Turn the gate's apparent width into a distance using the pinhole camera model
 (Module 1), then fly forward until you are STOP_DIST meters away.
 
-    distance = FOCAL_PX * REAL_GATE_WIDTH / pixel_width
-
-This is the inverse of the projection you wrote in Module 1: a known real width
-projects to a pixel width that shrinks with distance, so distance is recoverable.
+This inverts the projection you wrote in Module 1: a known real width projects to a
+pixel width that shrinks with distance, so distance is recoverable from FOCAL_PX,
+REAL_GATE_WIDTH, and the measured pixel width. See the README (Key terms).
 """
 
 import drone_core
@@ -59,9 +58,10 @@ def update(drone):
     #        cv2.boundingRect(contour) -> (x, y, w, h); uav_utils.clamp(...);
     #        drone.flight.send_pcmd(pitch, roll, yaw, throttle), drone.flight.stop().
     #
-    # No gate -> spin at SEARCH_YAW to find one. With a gate, distance =
-    # FOCAL_PX * REAL_GATE_WIDTH / w. Yaw to keep its box centered on COL_CENTER and
-    # add APPROACH_PITCH forward. Stop and finish once distance <= STOP_DIST.
+    # No gate -> spin at SEARCH_YAW to find one. With a gate, recover the distance from
+    # FOCAL_PX, REAL_GATE_WIDTH, and the box width (invert the Module 1 projection). Yaw to
+    # keep its box centered on COL_CENTER and add APPROACH_PITCH forward. Stop and finish
+    # once distance <= STOP_DIST.
 
     ###### END PUT CODE HERE #########
     ##################################
