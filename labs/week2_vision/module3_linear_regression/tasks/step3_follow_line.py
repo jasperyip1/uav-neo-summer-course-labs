@@ -6,6 +6,8 @@ Week 2/3 Lab — Step 3: Follow the Edge
 Steer the drone to keep the bright edge centered while flying forward.
 """
 
+import math
+
 import drone_core
 import drone_utils as uav_utils
 import cv2
@@ -58,6 +60,28 @@ def update(drone):
     # right of center means roll right to chase it. If you see too few bright pixels,
     # hold position rather than steering on noise -- but keep the timer running every
     # frame and finish after FOLLOW_TIME regardless, so losing the edge never hangs.
+
+    vel = drone.physics.get_linear_velocity()
+    disp = 0.0
+    v_x, v_y, v_z = vel[0], vel[1], vel[2]
+    disp += math.sqrt(v_x**2 + v_y**2 + v_z**2) * drone.get_delta_time()
+
+    _timer += drone.get_delta_time()
+    image = drone.camera.get_downward_image()
+    bright_mask = neo_lab.bright_mask(image, V_MIN)
+    bright_pixel_coords = np.argwhere(bright_mask)
+    bright_pixel_count = bright_pixel_coords.shape[0]
+    if bright_pixel_count < MIN_PIXELS and _timer < FOLLOW_TIME:
+        drone.flight.stop()
+    elif _timer < FOLLOW_TIME:
+        avg_col = np.mean(bright_pixel_coords[:, 1])
+        pixel_offset = avg_col - IMAGE_CENTER
+        roll = uav_utils.clamp(pixel_offset / IMAGE_CENTER * MAX_ROLL, -MAX_ROLL, MAX_ROLL)
+        drone.flight.send_pcmd(FORWARD_PITCH, roll, 0.0, 0.0)
+    elif _timer >= FOLLOW_TIME:
+        drone.flight.stop()
+        print(f"[Step 3] Finished following the edge for {FOLLOW_TIME} seconds. Traveled distance: {disp:.2f} meters.")
+        _done = True
 
     ###### END PUT CODE HERE #########
     ##################################
