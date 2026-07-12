@@ -22,7 +22,7 @@ if _d not in _sys.path:
 import neo_lab
 
 # -- Constants --------------------------------------------------------------
-THRESHOLD_VALUE = 127     # grayscale cutoff (0-255)
+THRESHOLD_VALUE = 80     # grayscale cutoff (0-255)
 HOVER_TIME      = 3.0     # seconds to observe
 
 # -- Module-level state -----------------------------------------------------
@@ -47,6 +47,16 @@ def update(drone):
     # grayscale, and threshold at THRESHOLD_VALUE to make a binary mask. Report the
     # fraction of white pixels. Advance _timer and finish (_done) once it reaches
     # HOVER_TIME. See the README (Key terms) for thresholding.
+
+    _timer += drone.get_delta_time()
+    image = drone.camera.get_downward_image()
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, binary = cv2.threshold(gray, THRESHOLD_VALUE, 255, cv2.THRESH_BINARY)
+    white_frac = np.count_nonzero(binary) / binary.size
+    if _timer >= HOVER_TIME:
+        print(f"[Step 1] Threshold value of {THRESHOLD_VALUE}: "
+              f"{white_frac * 100:.1f}% of pixels are white")
+        _done = True
 
     ###### END PUT CODE HERE #########
     ##################################
