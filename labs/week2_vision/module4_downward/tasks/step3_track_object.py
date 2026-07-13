@@ -60,6 +60,30 @@ def update(drone):
     # pick a sign, watch which way it runs, and flip it if it diverges. With no gate
     # in view, hold position and reset your centered timer.
 
+    image = drone.camera.get_downward_image()
+    largest_contour = neo_lab.largest_bright_contour(image, V_MIN, MIN_AREA)
+    if largest_contour is None:
+        drone.flight.stop()
+        _hold = 0.0
+        return False
+
+    center = uav_utils.get_contour_center(largest_contour)
+    row_error = center[0] - ROW_CENTER
+    col_error = center[1] - COL_CENTER
+    roll = uav_utils.clamp(col_error * MAX_TILT / COL_CENTER, -MAX_TILT, MAX_TILT)
+    pitch = uav_utils.clamp(-row_error * MAX_TILT / ROW_CENTER, -MAX_TILT, MAX_TILT)
+    drone.flight.send_pcmd(pitch, roll, 0, 0)
+
+    if abs(row_error) < CENTER_TOL and abs(col_error) < CENTER_TOL:
+        _hold += drone.get_delta_time()
+    else:
+        _hold = 0.0
+
+    if _hold >= HOLD_TIME:
+        drone.flight.stop()
+        print("[Step 3] Centered")
+        _done = True
+
     ###### END PUT CODE HERE #########
     ##################################
     return _done
