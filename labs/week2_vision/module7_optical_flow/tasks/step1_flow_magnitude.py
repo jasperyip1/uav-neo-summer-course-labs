@@ -27,7 +27,7 @@ import neo_lab
 
 # -- Constants --------------------------------------------------------------
 PROBE_PITCH = 0.10     # gentle forward drift so there is motion to measure
-HOVER_TIME = 4.0
+HOVER_TIME = 10.0
 SKIP = 2               # do the vision work every Nth frame (image pull + flow are the cost)
 MIN_PTS = 20           # re-find features when fewer than this survive
 # OpenCV parameters for feature detection and tracking (given; you don't tune these).
@@ -68,6 +68,36 @@ def update(drone):
     # and set _last_mag to their average pixel displacement. Remember the frame for next
     # time. Finish at HOVER_TIME, printing _last_mag. See the README (Key terms) and the
     # OpenCV sparse optical-flow functions.
+
+    drone.flight.send_pcmd(PROBE_PITCH, 0, 0, 0)
+    _timer += drone.get_delta_time()
+    _frame += 1
+    if _frame % SKIP == 0:
+        image = drone.camera.get_downward_image()
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        if _prev_gray is None or _prev_pts is None or len(_prev_pts) < MIN_PTS:
+            # (Re)detect corners in THIS frame; nothing to track against yet.
+            _prev_pts = cv2.goodFeaturesToTrack(gray, mask=None, **FEATURE_PARAMS)
+        else:
+            # Track the points found in _prev_gray into the current gray.
+            next_pts, status, _ = cv2.calcOpticalFlowPyrLK(_prev_gray, gray, _prev_pts, None, **LK_PARAMS)
+            keep = status.flatten() == 1
+            good_new = next_pts[keep]
+            good_old = _prev_pts[keep]
+            if len(good_new) > 0:
+                diff = good_new - good_old
+                displacements = np.sqrt(np.sum(diff ** 2, axis=1))
+                _last_mag = np.mean(displacements)
+            _prev_pts = good_new.reshape(-1, 1, 2)
+
+        _prev_gray = gray
+
+    if _timer >= HOVER_TIME:
+        drone.flight.stop()
+        print(f"[Step 1] mean displacement = {_last_mag:.3f} px/interval")
+        _done = True
+        
 
     ###### END PUT CODE HERE #########
     ##################################
