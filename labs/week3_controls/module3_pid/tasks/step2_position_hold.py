@@ -21,13 +21,13 @@ if _d not in _sys.path:
 import neo_lab
 
 # -- Constants --------------------------------------------------------------
-TARGET_DIST = 4.0    # meters forward
-TARGET_HEIGHT = 3.0  # hold launch height
-KP = 0.15
-KI = 0.0
-KD = 0.5    # strong velocity damping to avoid overshoot
+TARGET_DIST = 15.0    # meters forward
+TARGET_HEIGHT = 7.0  # hold launch height
+KP = 0.18
+KI = 0.05
+KD = 0.4    # strong velocity damping to avoid overshoot
 PITCH_LIMIT = 0.25
-ALT_KP = 0.12
+ALT_KP = 0.10
 THROTTLE_LIMIT = 0.5
 MIN_TRAVEL = 5.0   # fly at least this long before checking 'arrived'
 SETTLE_SPEED = 0.25  # must slow below this to count as arrived
@@ -45,7 +45,7 @@ def pid_control(err, err_int, err_dot, kp, ki, kd):
     """Return the PID controller output from the three gain terms (see README, Key terms)."""
     ##################################
     #### START PUT CODE HERE #########
-    output = 0.0
+    output = err * kp + err_int * ki + err_dot * kd
     ###### END PUT CODE HERE #########
     ##################################
     return output
@@ -73,6 +73,27 @@ def update(drone):
     # use a proportional term (ALT_KP) on height to hold TARGET_HEIGHT. Count as arrived
     # only after MIN_TRAVEL, once speed drops below SETTLE_SPEED for HOLD_TIME. See the
     # README (Key terms) for dead reckoning and the PID law.
+
+    vel = drone.physics.get_linear_velocity()
+    dt = drone.get_delta_time()
+    _t += dt
+    _pos += vel[2] * dt
+    err = TARGET_DIST - _pos
+    _err_int += err * dt
+    err_int = uav_utils.clamp(_err_int, -PITCH_LIMIT, PITCH_LIMIT)
+    err_dot = (err - _prev_err) / dt
+    _prev_err = err
+    pitch = pid_control(err, err_int, err_dot, KP, KI, KD)
+    clamped_pitch = uav_utils.clamp(pitch, -PITCH_LIMIT, PITCH_LIMIT)
+    height = drone.physics.get_altitude()
+    alt_err = TARGET_HEIGHT - height
+    throttle = uav_utils.clamp(alt_err * ALT_KP, -THROTTLE_LIMIT, THROTTLE_LIMIT)
+    drone.flight.send_pcmd(clamped_pitch, 0.0, 0.0, throttle)
+    if _t >= MIN_TRAVEL and abs(vel[2]) < SETTLE_SPEED and abs(err) < 0.5:
+        _hold += dt
+    if _hold >= HOLD_TIME:
+        print(f"Arrived at destination after traveling {_pos} m")
+        _done = True
 
     ###### END PUT CODE HERE #########
     ##################################
